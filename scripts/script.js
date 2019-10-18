@@ -209,6 +209,11 @@ function (
        showLoading;
        map.addLayer(centralAmericaLyr);
        lastLayer=actualLayer;
+       var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+       infoWindow.startup();
+       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+       var infoTemplate = new InfoTemplate();
+       infoTemplate.setContent(getWindowContent);
        break;
      case "South America":
        map.removeAllLayers();
@@ -221,6 +226,11 @@ function (
        showLoading;
        map.addLayer(southAmericaLyr);
        lastLayer=actualLayer;
+       var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+       infoWindow.startup();
+       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+       var infoTemplate = new InfoTemplate();
+       infoTemplate.setContent(getWindowContent);
        break;
      case "South Asia":
        map.removeAllLayers();
@@ -233,6 +243,11 @@ function (
        showLoading;
        map.addLayer(southAsiaLyr);
        lastLayer=actualLayer;
+       var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+       infoWindow.startup();
+       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+       var infoTemplate = new InfoTemplate();
+       infoTemplate.setContent(getWindowContent);
        break;
      case "Africa":
        map.removeAllLayers();
@@ -245,6 +260,11 @@ function (
        showLoading;
        map.addLayer(africaLyr);
        lastLayer=actualLayer;
+       var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+       infoWindow.startup();
+       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+       var infoTemplate = new InfoTemplate();
+       infoTemplate.setContent(getWindowContent);
        break;
      case "Select Region":
       // map.removeLayer(queryLastLayerName(lastLayer));
@@ -257,6 +277,11 @@ function (
       });
       showLoading;
       lastLayer=actualLayer;
+      var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+      infoWindow.startup();
+      map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+      var infoTemplate = new InfoTemplate();
+      infoTemplate.setContent(getWindowContent);
       break;
 
    }

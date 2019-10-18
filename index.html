@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Global Streamflow Forecasting</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.25/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.25/esri/css/esri.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="appStyle.css">
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.js"
+            integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+            crossorigin="anonymous">
+    </script>
+    <script src="https://js.arcgis.com/3.25/"></script>
+    <script src="scripts/script.js"></script>
+
+
+  </head>
+  <body class="claro">
+  <!-- <body> -->
+
+   <div id="mapDiv">
+
+    <select id='layersMenu'>
+    <option value="Select Region">Select Region</option>
+    <option value="Central America">Central America</option>
+    <option value="South America">South America</option>
+    <option value="South Asia">South Asia</option>
+    <option value="Africa">Africa</option>
+    </select>
+
+
+     <img id="loadingImg" src="images/loader.gif" alt="My image">
+     <div id="info">
+       <div id="legendDiv"></div>
+     </div>
+   </div>
+   <div id="graphs" style="display: none;">
+   </div>
+
+  </body>
+</html>

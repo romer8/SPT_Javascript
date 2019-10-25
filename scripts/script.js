@@ -77,12 +77,14 @@ function (
   map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
   var infoTemplate = new InfoTemplate();
   infoTemplate.setContent(getWindowContent);
+  esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
+
 
 
 
   // getWindowContent=function(graphic){
   function getWindowContent(graphic){
-    infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
+    // infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
     var tc = new TabContainer({
       style: "min-height:33px;",// this makes the tabs visable
       // style: "min-width:2000px;"
@@ -106,23 +108,26 @@ function (
 
     tc.watch("selectedChildWidget", function(name, oldVal, newVal){
       if ( newVal.title === "Historical" ) {
-        cp2.setContent(getHistoricData(graphic));
         actualTab="Historical";
+        cp2.setContent(getHistoricData(graphic));
       }
       else if (newVal.title === "Forecast"){
-        cp1.setContent(getForecast(graphic));
         actualTab="Forecast";
+        cp1.setContent(getForecast(graphic));
       }
     else if (newVal.title === "Seasonal Average"){
+       actualTab="Seasonal Average";
         cp3.setContent(getSeasonalAverage(graphic));
-        actualTab="Seasonal Average";
       }
     });
 
       tc.addChild(cp1);
       tc.addChild(cp2);
       tc.addChild(cp3);
+    // infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
+
       return tc.domNode;
+      infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
 
   }
 
@@ -214,6 +219,7 @@ function (
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
+       getAvailable();
        break;
      case "South America":
        map.removeAllLayers();
@@ -231,6 +237,7 @@ function (
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
+       getAvailable();
        break;
      case "South Asia":
        map.removeAllLayers();
@@ -248,6 +255,7 @@ function (
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
+       getAvailable();
        break;
      case "Africa":
        map.removeAllLayers();
@@ -265,6 +273,7 @@ function (
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
+       getAvailable();
        break;
      case "Select Region":
       // map.removeLayer(queryLastLayerName(lastLayer));
@@ -282,6 +291,7 @@ function (
       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
       var infoTemplate = new InfoTemplate();
       infoTemplate.setContent(getWindowContent);
+      getAvailable();
       break;
 
    }
@@ -312,7 +322,7 @@ function (
          //   Plotly.purge('graph');
          //   $('#graph').remove();
          // };
-          var layerUrl= "http://aiforearth.azure-api.net/streamflow/HistoricSimulation?region=africa-continental&reach_id=131655";
+          var layerUrl= "https://aiforearth.azure-api.net/streamflow/HistoricSimulation?region=africa-continental&reach_id=131655";
           var method= "HistoricSimulation";
           var region= "africa-continental";
           var reachID="131655";
@@ -356,6 +366,42 @@ function (
       }
    };
 
+   function getAvailable(){
+
+      // var layer_URL="http://aiforearth.azure-api.net/streamflow/AvailableRegions&Ocp-Apim-Subscription-Key=67c316eb34854f9c94485d485df16787";
+      var layer_URL="http://aiforearth.azure-api.net/streamflow/AvailableRegions";
+
+      // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/AvailableRegions/";
+      // var layer_URL="https://tethys2.byu.edu/sptapi/AvailableRegions";
+      esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
+
+      $.ajax({
+        type: 'GET',
+        url: layer_URL,
+        // dataType: 'text',
+        // contentType: "text/plain",
+        // crossOrigin: true,
+
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
+        },
+        // headers: {
+        //     "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787",
+        // },
+
+        // beforeSend: function(xhrObj){
+        // // Request headers
+        //   xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+        // },
+        success: function(data) {
+          console.log(data);
+
+        }
+      });
+    };
+
+
    ///******* MAIN FUNCTIONS ******///////
    function getForecast(graphic) {
      console.log('WE HAVE ENTERED GETFORECAST FUNCTION()');
@@ -370,16 +416,34 @@ function (
      console.log(region);
      console.log('printing reachID');
      console.log(reachid);
-     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+     // var layer_URL="https://tethys2.byu.edu/sptapi/"+method+"?region="+region+"&reach_id="+reachid;
+
+     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";
+
+     esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
+     // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";;
+
+     // var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"/?reach_id="+reachid;
        $.ajax({
          type: 'GET',
          url: layer_URL,
-         dataType: 'text',
-         contentType: "text/plain",
-         beforeSend: function(xhrObj){
-         // Request headers
-           xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+         // dataType: 'text',
+         // contentType: "text/plain",
+         headers: {
+           'Access-Control-Allow-Origin': '*',
+           "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
          },
+         // headers: {
+         //   'Access-Control-Allow-Origin': '*',
+         //   "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
+         // },
+        //  headers: {
+        // "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787",
+        // },
+         // beforeSend: function(xhrObj){
+         // // Request headers
+         //   xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+         // },
          success: function(data) {
            console.log(watershed);
            console.log(subbasin);
@@ -497,7 +561,7 @@ function (
            }//add lines to plotly
 
        });
-
+       method="ForecastEnsembles";
 
    };
 
@@ -661,7 +725,11 @@ function (
     console.log(region);
     console.log('printing reachID');
     console.log(reachid);
+    // var layer_URL="https://tethys2.byu.edu/sptapi/"+method+"?reach_id="+reachid;
+
     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+    // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";;
+
 
     $.ajax({
       type:'GET',
@@ -674,7 +742,7 @@ function (
       },
       success: function(data) {
             console.log('we have succeed getting the seasonal average');
-            console.log(data);
+            // console.log(data);
 
             if ($('#graph').length) {
                 Plotly.purge('graph');
@@ -740,6 +808,7 @@ function (
         }//add lines to plotly
 
     });
+    method="ForecastEnsembles";
 
   };
 
@@ -857,7 +926,14 @@ function (
     console.log(region);
     console.log('printing reachID');
     console.log(reachid);
+    // var layer_URL="https://tethys2.byu.edu/sptapi/"+method+"?reach_id="+reachid;
+
     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+    var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+
+    // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid;
+
+
     $.ajax({
       type:'GET',
       // assync: true,
@@ -951,6 +1027,7 @@ function (
 
     });
 
+    method="ForecastEnsembles";
 
   };
 
@@ -1067,7 +1144,13 @@ function (
 
 ///*****RTURN PERIODS****/////
 function getreturnperiods(start, end, region, reachid) {
+  // var layer_URL="https://tethys2.byu.edu/sptapi/ReturnPeriods"+"?reach_id="+reachid;
+
   var layer_URL="http://aiforearth.azure-api.net/streamflow/ReturnPeriods"+"?region="+region+"&reach_id="+reachid;
+  // var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+
+  // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/ReturnPeriods"+"?region="+region+"&reach_id="+reachid;
+
   console.log("inside getreturnperiods");
     $.ajax({
       type:'GET',
@@ -1075,6 +1158,9 @@ function getreturnperiods(start, end, region, reachid) {
       url: layer_URL,
       dataType: 'text',
       contentType:'text/plain',
+      headers: {
+        'Access-Control-Allow-Origin': '*'
+      },
       beforeSend: function(xhrObj){
       // Request headers
         xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
@@ -1082,27 +1168,40 @@ function getreturnperiods(start, end, region, reachid) {
       success: function (data) {
         console.log("printing data");
         console.log(typeof(data));
-        console.log(data);
-        var returnPeriods = JSON.parse(data);
-        console.log(returnPeriods);
+        // console.log(data);
+        // var returnPeriods = JSON.parse(data);
+        var returnPeriods=[];
+        var toSplitNewLine= data.split("\n");
+        for(var i= 0; i< toSplitNewLine.length-1; i++){
+          var toSplit= toSplitNewLine[i].split(",");
+
+          returnPeriods.push({
+            time_series: toSplit[0],
+            val: toSplit[1]
+          });
+          // json.push({toSplit[0]:toSplit[1]});
+
+        }
+        // console.log(returnPeriods);
+        // console.log(returnPeriods);
 
         //RETURN PERIOD MAX
-        var return_max = parseFloat(returnPeriods.time_series[0].val);
+        var return_max = parseFloat(returnPeriods[1].val);
         console.log("printing Max");
         console.log(return_max);
 
         //RETURN PERIOD 20
-        var return_20 = parseFloat(returnPeriods.time_series[1].val);
+        var return_20 = parseFloat(returnPeriods[2].val);
         console.log("printing return_20");
         console.log(return_20);
 
         //RETURN PERIOD 10
-        var return_10 = parseFloat(returnPeriods.time_series[2].val);
+        var return_10 = parseFloat(returnPeriods[3].val);
         console.log("printing return10");
         console.log(return_10);
 
         //RETURN PERIOD 2
-        var return_2 = parseFloat(returnPeriods.time_series[3].val);
+        var return_2 = parseFloat(returnPeriods[4].val);
         console.log("printing return2");
         console.log(return_2);
         var band_alt_max = -9999

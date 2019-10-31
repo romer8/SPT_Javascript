@@ -181,12 +181,26 @@ function (
      infoTemplates: southAsiaTemplate,
   });
 
+  //TRYING NEW LAYERS
+  var testTemplate = {
+      1: {
+         infoTemplate: infoTemplate,
+         // layerUrl: "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/south_asia/MapServer/1"
+         layerUrl: "https://livefeeds2dev.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/1"
+     }
+  };
+
+  var testLyr = new ArcGISDynamicMapServiceLayer("https://livefeeds2dev.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer",{
+     infoTemplates: testTemplate,
+  });
+
 
    var layerDefinitions = [];
    centralAmericaLyr.setLayerDefinitions(layerDefinitions);
    southAmericaLyr.setLayerDefinitions(layerDefinitions);
    africaLyr.setLayerDefinitions(layerDefinitions);
    southAsiaLyr.setLayerDefinitions(layerDefinitions);
+   testLyr.setLayerDefinitions(layerDefinitions);
    // map.addLayers([southAsiaLyr, southAmericaLyr, africaLyr,centralAmericaLyr]);
    // map.addLayer(centralAmericaLyr);
 
@@ -293,6 +307,26 @@ function (
       infoTemplate.setContent(getWindowContent);
       getAvailable();
       break;
+     case "Esri Test Layers":
+       // map.removeLayer(queryLastLayerName(lastLayer));
+       map.removeAllLayers();
+       map.destroy();
+       map = new Map("mapDiv", {
+         center: [-13.49, 6.361],
+         zoom: 3,
+         basemap: "dark-gray"
+       });
+       showLoading;
+       map.addLayer(testLyr);
+       lastLayer=actualLayer;
+       var infoWindow = new InfoWindow(null, domConstruct.create("div"));
+       infoWindow.startup();
+       map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
+       var infoTemplate = new InfoTemplate();
+       infoTemplate.setContent(getWindowContent);
+       getAvailable();
+       break;
+
 
    }
    // hide nav menu after selection on mobile
@@ -368,12 +402,13 @@ function (
 
    function getAvailable(){
 
-      // var layer_URL="http://aiforearth.azure-api.net/streamflow/AvailableRegions&Ocp-Apim-Subscription-Key=67c316eb34854f9c94485d485df16787";
-      var layer_URL="http://aiforearth.azure-api.net/streamflow/AvailableRegions";
+      // var layer_URL="http://aiforearth.azure-api.net/streamflow/AvailableRegions";
 
       // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/AvailableRegions/";
       // var layer_URL="https://tethys2.byu.edu/sptapi/AvailableRegions";
-      esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
+      var layer_URL="https://tethys2.byu.edu/localsptapi/api/AvailableRegions/";
+
+      // esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
 
       $.ajax({
         type: 'GET',
@@ -382,10 +417,10 @@ function (
         // contentType: "text/plain",
         // crossOrigin: true,
 
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
-        },
+        // headers: {
+        //   'Access-Control-Allow-Origin': '*',
+        //   "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
+        // },
         // headers: {
         //     "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787",
         // },
@@ -419,6 +454,10 @@ function (
      // var layer_URL="https://tethys2.byu.edu/sptapi/"+method+"?region="+region+"&reach_id="+reachid;
 
      var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";
+     var layer_URL="https://tethys2.byu.edu/localsptapi/api/"+method+"/?reach_id="+reachid+"&return_format=csv";
+     // var layer_URL="https://tethys2.byu.edu/localsptapi/api/"+method+"/?region="+region+"/?reach_id="+reachid+"&return_format=csv";
+
+
 
      esriConfig.defaults.io.corsEnabledServers.push("aiforearth.azure-api.net");
      // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";;
@@ -429,10 +468,10 @@ function (
          url: layer_URL,
          // dataType: 'text',
          // contentType: "text/plain",
-         headers: {
-           'Access-Control-Allow-Origin': '*',
-           "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
-         },
+         // headers: {
+         //   'Access-Control-Allow-Origin': '*',
+         //   "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
+         // },
          // headers: {
          //   'Access-Control-Allow-Origin': '*',
          //   "Ocp-Apim-Subscription-Key":"67c316eb34854f9c94485d485df16787"
@@ -728,6 +767,8 @@ function (
     // var layer_URL="https://tethys2.byu.edu/sptapi/"+method+"?reach_id="+reachid;
 
     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+    var layer_URL="https://tethys2.byu.edu/localsptapi/api/"+method+"/?reach_id="+reachid+"&return_format=csv";
+
     // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid+"&return_format=csv";;
 
 
@@ -736,10 +777,10 @@ function (
       url: layer_URL,
       dataType: 'text',
       contentType:'text/plain',
-      beforeSend: function(xhrObj){
-      // Request headers
-        xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
-      },
+      // beforeSend: function(xhrObj){
+      // // Request headers
+      //   xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+      // },
       success: function(data) {
             console.log('we have succeed getting the seasonal average');
             // console.log(data);
@@ -930,6 +971,7 @@ function (
 
     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
     var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
+    var layer_URL="https://tethys2.byu.edu/localsptapi/api/"+method+"/?reach_id="+reachid+"&return_format=csv";
 
     // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/"+method+"/?region="+region+"&reach_id="+reachid;
 
@@ -940,10 +982,10 @@ function (
       url: layer_URL,
       dataType: 'text',
       contentType:'text/plain',
-      beforeSend: function(xhrObj){
-      // Request headers
-        xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
-      },
+      // beforeSend: function(xhrObj){
+      // // Request headers
+      //   xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+      // },
       success: function(data) {
             console.log('we have succeed gethistorical');
             // console.log(data);
@@ -1147,6 +1189,8 @@ function getreturnperiods(start, end, region, reachid) {
   // var layer_URL="https://tethys2.byu.edu/sptapi/ReturnPeriods"+"?reach_id="+reachid;
 
   var layer_URL="http://aiforearth.azure-api.net/streamflow/ReturnPeriods"+"?region="+region+"&reach_id="+reachid;
+  var layer_URL="https://tethys2.byu.edu/localsptapi/api/ReturnPeriods/?reach_id="+reachid+"&return_format=csv";
+
   // var layer_URL="http://aiforearth.azure-api.net/streamflow/"+method+"?region="+region+"&reach_id="+reachid;
 
   // var layer_URL="http://global-streamflow-prediction.eastus.azurecontainer.io/api/ReturnPeriods"+"?region="+region+"&reach_id="+reachid;
@@ -1158,13 +1202,13 @@ function getreturnperiods(start, end, region, reachid) {
       url: layer_URL,
       dataType: 'text',
       contentType:'text/plain',
-      headers: {
-        'Access-Control-Allow-Origin': '*'
-      },
-      beforeSend: function(xhrObj){
-      // Request headers
-        xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
-      },
+      // headers: {
+      //   'Access-Control-Allow-Origin': '*'
+      // },
+      // beforeSend: function(xhrObj){
+      // // Request headers
+      //   xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","67c316eb34854f9c94485d485df16787");
+      // },
       success: function (data) {
         console.log("printing data");
         console.log(typeof(data));

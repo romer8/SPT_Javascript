@@ -488,7 +488,7 @@ function (
            console.log(subbasin);
            console.log(reachid);
            console.log("printing data from getForecast function");
-           // console.log(data);
+           console.log(data);
 
            if ($('#graph').length) {
              Plotly.purge('graph');
@@ -497,30 +497,71 @@ function (
 
            $('div .contentPane').append('<div id="graph"></div>');
            var allLines = data.split('\n');
+           console.log("printing allLines");
+           console.log(allLines);
            var headers = allLines[0].split(',');
-
-           for (var i=1; i < allLines.length; i++) {
+           // console.log("printing Headers");
+           // console.log(headers);
+           for (var i=1; i < allLines.length-1; i++) {
              var data = allLines[i].split(',');
+             // console.log("printing the data from the loop");
+             // console.log(data);
 
-             if (headers.includes('high_res (m3/s)')) {
-               dates.highres.push(data[0]);
-               values.highres.push(data[1]);
+             // if (headers.includes('high_res (m3/s)')) {
+            // if (headers.includes('ensemble_52 (m3/s)') {
+            //    dates.highres.push(data[0]);
+            //    values.highres.push(data[1]);
 
-               if (data[2] !== 'nan') {
+               // if (data[2] !== 'nan') {
+              if (data[1] !== 'nan' ) {
+                // if(data.includes('nan')){
+                 if(data[data.length-1]!=='nan'){
+                   dates.highres.push(data[0]);
+                   values.highres.push(data[data.length-1]);
+                 }
+                 data.pop();
+                 console.log("printing data");
+                 console.log(i);
+
                  dates.dates.push(data[0]);
-                 values.max.push(data[2]);
-                 values.mean.push(data[3]);
-                 values.min.push(data[4]);
-                 values.std_dev_range_lower.push(data[5]);
-                 values.std_dev_range_upper.push(data[6]);
-               }
-             } else { //edited to show historic data
-                 dates.dates.push(data[0]);
-                 values.max.push(data[1]);
-                 values.mean.push(data[2]);
-                 values.min.push(data[3]);
-                 values.std_dev_range_lower.push(data[4]);
-                 values.std_dev_range_upper.push(data[5]);
+                 data.shift();
+                 // values.max.push(data[2]);
+                 values.max.push(math.max(data));
+                 // values.mean.push(data[3]);
+                 // var totalsum=data.reduce((previous, current) => current += previous);
+                 // var average= totalsum/data.lenght;
+                 var average=math.mean(data);
+                 values.mean.push(average);
+                 // values.min.push(data[4]);
+                 values.min.push(math.min(data));
+                 var standardDev=math.std(data);
+                 var lowstandardDev= average-standardDev;
+                 var upperstandardDev= average+standardDev;
+                 // values.std_dev_range_lower.push(data[5]);
+                 values.std_dev_range_lower.push(lowstandardDev);
+                 // values.std_dev_range_upper.push(data[6]);
+                 values.std_dev_range_upper.push(upperstandardDev);
+               // }
+
+            }
+             // }
+             else { //edited to show historic data
+                 // dates.dates.push(data[0]);
+                 // // data.shift();
+                 // values.max.push(data[1]);
+                 // // values.max.push(Math.max(data));
+                 // values.mean.push(data[2]);
+                 // // var average=math.mean(data);
+                 // // values.mean.push(average);
+                 // values.min.push(data[3]);
+                 // // values.min.push(Math.min(data));
+                 // // var standardDev=math.std(data);
+                 // // var lowstandardDev= average-standardDev;
+                 // // var upperstandardDev= average+standardDev;
+                 // values.std_dev_range_lower.push(data[4]);
+                 // // values.std_dev_range_lower.push(lowstandardDev);
+                 // values.std_dev_range_upper.push(data[5]);
+                 // values.std_dev_range_upper.push(upperstandardDev);
                }
              }
            },
@@ -541,7 +582,8 @@ function (
                    mode: "lines",
                    line: {color: 'rgb(152, 251, 152)', width: 0}
                };
-
+               console.log("max in complete form");
+               console.log(max);
                var min = {
                    name: 'Min',
                    x: dates.dates,
@@ -594,6 +636,13 @@ function (
 
                var index = dates.dates.length - 2;
                getreturnperiods(dates.dates[0], dates.dates[index], region, reachid);
+               console.log("printing dates");
+               console.log(dates.dates);
+               console.log("printing values");
+               console.log(values);
+               console.log(values.max);
+               console.log(values.min);
+               console.log(values.mean);
 
                dates.highres = [], dates.dates = [];
                values.highres = [], values.max = [], values.mean = [], values.min = [], values.std_dev_range_lower = [], values.std_dev_range_upper = [];

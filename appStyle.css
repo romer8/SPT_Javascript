@@ -59,3 +59,25 @@ ul.items{
 .esriLegendLayerLabel{
   display:none;
 }
+#bottomPanel {
+  left: 50%;
+  margin: 0 auto;
+  margin-left: -500px;
+  position: absolute;
+  bottom: 2.5em;
+}
+
+#timeInfo{
+  border-radius: 4px;
+  border: solid 2px #ccc;
+  background-color: #fff;
+  display: block;
+  padding: 5px;
+  position: relative;
+  text-align: center;
+  width: 1000px;
+  z-index: 99;
+
+
+  max-width: 100%;
+}

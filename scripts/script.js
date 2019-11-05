@@ -349,6 +349,15 @@ function (
   });//legend
 
 
+
+
+
+
+
+
+
+
+
        ///*** EVENTS FOR THE MAP****///
    on(map, "update-end", hideLoading);
    map.infoWindow.on('hide',function(graphic){
@@ -382,6 +391,71 @@ function (
                }
            })
        });// removes plot on close
+ //*** Slider Cholita***//
+ map.on("layers-add-result", initSlider);
+ function initSlider() {
+     var timeSlider = new TimeSlider({
+         style: "width: 100%;"
+     }, dom.byId("timeSliderDiv"));
+     map.setTimeSlider(timeSlider);
+
+//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/south_asia/MapServer?f=pjson"
+     var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/central_america/MapServer?f=pjson"
+//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/comoros/MapServer?f=pjson"
+//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/north_america/MapServer?f=pjson"
+
+
+     $.getJSON(jsonobject, function(data) {
+         textents = data.timeInfo.timeExtent
+         tinterval = data.timeInfo.defaultTimeInterval
+         console.log(textents);
+         var timeExtent = new TimeExtent();
+         console.log("this is to know teh true start time");
+         console.log(new Date(textents[0]));
+         console.log("this is to know teh true end time");
+         console.log(new Date(textents[1]));
+         timeExtent.startTime = new Date(textents[0]).addDays(2);
+         timeExtent.endTime = new Date(textents[1]);
+         console.log('Time Extent');
+         console.log(timeExtent);
+         console.log('Printing the start time and endtime of the timeExtend');
+         console.log(timeExtent.startTime+"    "+timeExtent.endTime);
+         console.log(textents);
+         timeSlider.setThumbCount(2);
+         timeSlider.createTimeStopsByTimeInterval(timeExtent, 3, "esriTimeUnitsHours");
+         timeSlider.setThumbIndexes([0,0]);
+         timeSlider.setThumbMovingRate(1500);
+         timeSlider.startup();
+     });
+
+     timeSlider.on("time-extent-change", function(evt) {
+         var endValString = evt.endTime;
+         var startValString = evt.startTime;
+         evt.startTime = evt.endTime;
+         var ampm='am';
+         var date=JSON.stringify(startValString).slice(1,24);
+         var timearray=date.split("T");
+         date=timearray[0];
+         timearray=timearray[1].split(":");
+         /*  if(timearray[0]>=12)
+           {
+               timearray[0]=timearray[0]-12;
+               ampm='pm';
+           } else{
+              timearray[0]=parseInt(timearray[0],10);
+           }
+           if(timearray[0]==0){
+               timearray[0]=12;
+           }*/
+         date=date+" "+timearray[0]+":"+timearray[1]/*+" "+ampm*/;
+         dom.byId("slidercap").innerHTML = "<i>" + date + "<\/i>";
+     });
+ }//bottom ribbion
+
+
+
+
+
 
    function decideMethodAPI(){
      switch (actualTab) {
@@ -1050,6 +1124,8 @@ function (
 
             var allLines = data.split('\n');
             var headers = allLines[0].split(',');
+            console.log("historical");
+            console.log(allLines);
 
             for (var i=1; i < allLines.length; i++) {
                 var data = allLines[i].split(',');
@@ -1469,24 +1545,13 @@ function hideLoading(error) {
     map.showZoomSlider();
 }
 
-//***FUNCTION TO MAKE THE CHANGE OF LAYER EASIER**//
-// for some reason is not working**//
+Date.prototype.addDays = function(days) {
+    var date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+}
 
 
-// function rePositionMap(lat,long,layer,zoomLevel, baseMap){
-//   map.removeAllLayers();
-//   map.destroy();
-//   loading = dom.byId("loadingImg");
-//   map = new Map("mapDiv", {
-//     center: [long, lat],
-//     zoom: zoomLevel,
-//     basemap: baseMap
-//   });
-//   showLoading;
-//   map.addLayer(layer);
-//   map.setVisibility(false);
-//
-// }
 
 
 

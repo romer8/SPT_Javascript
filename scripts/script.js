@@ -8,6 +8,8 @@ var actualLayer="Select Region";
 var lastLayer="Select Region";
 var actualTab="Forecast";
 var method="ForecastEnsembles";
+var layerForSlider="Select Region";
+var timeSlider;
 
 
 require([
@@ -87,7 +89,6 @@ function (
     // infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
     var tc = new TabContainer({
       style: "min-height:33px;",// this makes the tabs visable
-      // style: "min-width:2000px;"
     }, domConstruct.create("div"));
 
     // **Forecast Tab**//
@@ -124,10 +125,9 @@ function (
       tc.addChild(cp1);
       tc.addChild(cp2);
       tc.addChild(cp3);
-    // infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
 
       return tc.domNode;
-      infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
+      // infoTemplate.setTitle(graphic.attributes.watershed+" ("+graphic.attributes.subbasin+"): "+graphic.attributes.comid);
 
   }
 
@@ -194,29 +194,25 @@ function (
      infoTemplates: testTemplate,
   });
 
-
+  //**DEFINITION OF LAYERS**//
    var layerDefinitions = [];
    centralAmericaLyr.setLayerDefinitions(layerDefinitions);
    southAmericaLyr.setLayerDefinitions(layerDefinitions);
    africaLyr.setLayerDefinitions(layerDefinitions);
    southAsiaLyr.setLayerDefinitions(layerDefinitions);
    testLyr.setLayerDefinitions(layerDefinitions);
-   // map.addLayers([southAsiaLyr, southAmericaLyr, africaLyr,centralAmericaLyr]);
-   // map.addLayer(centralAmericaLyr);
 
-
-
-
+  //**CHANGE LAYERS WITH A DROWNDOWN MENU**//
   var loadLayers= $("#layersMenu");
   var point;
   loadLayers.change(function(e) {
     actualLayer=loadLayers.find(":selected").text();
 
-   // switch (e.target.textContent) {
     console.log(lastLayer);
     console.log(actualLayer);
     switch (actualLayer) {
      case "Central America":
+      // registry.remove(timeSlider)
        map.removeAllLayers();
        map.destroy();
        loading = dom.byId("loadingImg");
@@ -228,14 +224,20 @@ function (
        showLoading;
        map.addLayer(centralAmericaLyr);
        lastLayer=actualLayer;
+
        var infoWindow = new InfoWindow(null, domConstruct.create("div"));
        infoWindow.startup();
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
        getAvailable();
+       // map.on("load", initSlider("centralAmericaLyr"));
+       map.on("layers-add-result", initSlider("centralAmericaLyr"));
        break;
+
      case "South America":
+      // registry.remove(timeSlider)
+
        map.removeAllLayers();
        map.destroy();
        map = new Map("mapDiv", {
@@ -246,13 +248,16 @@ function (
        showLoading;
        map.addLayer(southAmericaLyr);
        lastLayer=actualLayer;
+
        var infoWindow = new InfoWindow(null, domConstruct.create("div"));
        infoWindow.startup();
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
        getAvailable();
+       map.on("layers-add-result", initSlider("southAmericaLyr"));
        break;
+
      case "South Asia":
        map.removeAllLayers();
        map.destroy();
@@ -264,13 +269,16 @@ function (
        showLoading;
        map.addLayer(southAsiaLyr);
        lastLayer=actualLayer;
+
        var infoWindow = new InfoWindow(null, domConstruct.create("div"));
        infoWindow.startup();
        map.infoWindow.resize(Math.min(800,screen.width),Math.min(750,screen.height));
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
        getAvailable();
+       map.on("layers-add-result", initSlider("southAsiaLyr"));
        break;
+
      case "Africa":
        map.removeAllLayers();
        map.destroy();
@@ -288,9 +296,10 @@ function (
        var infoTemplate = new InfoTemplate();
        infoTemplate.setContent(getWindowContent);
        getAvailable();
+       map.on("layers-add-result", initSlider("africaLyr"));
        break;
+
      case "Select Region":
-      // map.removeLayer(queryLastLayerName(lastLayer));
       map.removeAllLayers();
       map.destroy();
       map = new Map("mapDiv", {
@@ -308,7 +317,6 @@ function (
       getAvailable();
       break;
      case "Esri Test Layers":
-       // map.removeLayer(queryLastLayerName(lastLayer));
        map.removeAllLayers();
        map.destroy();
        map = new Map("mapDiv", {
@@ -348,16 +356,6 @@ function (
     legend.startup();
   });//legend
 
-
-
-
-
-
-
-
-
-
-
        ///*** EVENTS FOR THE MAP****///
    on(map, "update-end", hideLoading);
    map.infoWindow.on('hide',function(graphic){
@@ -392,17 +390,51 @@ function (
            })
        });// removes plot on close
  //*** Slider Cholita***//
- map.on("layers-add-result", initSlider);
- function initSlider() {
-     var timeSlider = new TimeSlider({
-         style: "width: 100%;"
-     }, dom.byId("timeSliderDiv"));
-     map.setTimeSlider(timeSlider);
+ // map.on("layers-add-result", initSlider);
+ // map.on("load", initSlider);
+ timeSlider = new TimeSlider({
 
-//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/south_asia/MapServer?f=pjson"
-     var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/central_america/MapServer?f=pjson"
-//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/comoros/MapServer?f=pjson"
-//        var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/north_america/MapServer?f=pjson"
+      style: "width: 100%;"
+  }, dom.byId("timeSliderDiv"));
+  map.setTimeSlider(timeSlider);
+
+
+ function initSlider(layername) {
+   var nameLayerURL;
+   console.log("this is inside INITSLIDER FUNCTION");
+     // var timeSlider = new TimeSlider({
+    // timeSlider = new TimeSlider({
+    //
+    //      style: "width: 100%;"
+    //  }, dom.byId("timeSliderDiv"));
+    //  map.setTimeSlider(timeSlider);
+
+    // var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/central_america/MapServer?f=pjson";
+    var jsonobject= decideLayerName(layername);
+    // switch (layername) {
+    //  case "centralAmericaLyr":
+    //    nameLayerURL="central_america";
+    //    var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+    //    break;
+    //  case "southAmericaLyr":
+    //    nameLayerURL="south_america";
+    //    var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+    //    break;
+    //  case "southAsiaLyr":
+    //    nameLayerURL="south_asia";
+    //    var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+    //    break;
+    //  case "africaLyr":
+    //    nameLayerURL="africa"
+    //    var jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+    //    break;
+    //  case "Select Region":
+    //   return;
+    //   break;
+    //  case "testLyr":
+    //    var jsonobject= "https://livefeeds2dev.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/f=pjson";
+    //    break;
+    //  }
 
 
      $.getJSON(jsonobject, function(data) {
@@ -410,9 +442,9 @@ function (
          tinterval = data.timeInfo.defaultTimeInterval
          console.log(textents);
          var timeExtent = new TimeExtent();
-         console.log("this is to know teh true start time");
+         console.log("this is to know the true start time");
          console.log(new Date(textents[0]));
-         console.log("this is to know teh true end time");
+         console.log("this is to know the true end time");
          console.log(new Date(textents[1]));
          timeExtent.startTime = new Date(textents[0]).addDays(2);
          timeExtent.endTime = new Date(textents[1]);
@@ -455,24 +487,6 @@ function (
 
 
 
-
-
-   function decideMethodAPI(){
-     switch (actualTab) {
-      case "Forecast":
-        method="ForecastEnsembles";
-        return method;
-        break;
-      case "Historical":
-        method="HistoricSimulation";
-        return method;
-        break;
-      case "Seasonal Average":
-        method="SeasonalAverage";
-        return method;
-        break;
-      }
-   };
 
    function getAvailable(){
 
@@ -728,151 +742,6 @@ function (
    };
 
 
-  // ///******* MAIN FUNCTIONS ******///////
-  // function getForecast(graphic) {
-  //   console.log('WE HAVE ENTERED GETFORECASTDATA FUNCTION()');
-  //   var watershed=graphic.attributes.watershed;
-  //   var subbasin = graphic.attributes.subbasin;
-  //   var region=watershed+ "-" +subbasin;
-  //   var reachid = graphic.attributes.comid;
-  //   var method="ForecastEnsembles";
-  //
-  //   console.log('printing region');
-  //   console.log(region);
-  //   console.log('printing reachID');
-  //   console.log(reachid);
-  //
-  //     $.ajax({
-  //       type: 'GET',
-  //       url: 'query/',
-  //       data:{
-  //         method:method,
-  //         region: region,
-  //         reachid: reachid
-  //       },
-  //       dataType: 'text',
-  //       contentType: "text/plain",
-  //
-  //       success: function(data) {
-  //         console.log(watershed);
-  //         console.log(subbasin);
-  //         console.log(reachid);
-  //         console.log("printing data from getForecast function");
-  //         // console.log(data);
-  //
-  //         if ($('#graph').length) {
-  //           Plotly.purge('graph');
-  //           $('#graph').remove();
-  //         };
-  //
-  //         $('div .contentPane').append('<div id="graph"></div>');
-  //         var allLines = data.split('\n');
-  //         var headers = allLines[0].split(',');
-  //
-  //         for (var i=1; i < allLines.length; i++) {
-  //           var data = allLines[i].split(',');
-  //
-  //           if (headers.includes('high_res (m3/s)')) {
-  //             dates.highres.push(data[0]);
-  //             values.highres.push(data[1]);
-  //
-  //             if (data[2] !== 'nan') {
-  //               dates.dates.push(data[0]);
-  //               values.max.push(data[2]);
-  //               values.mean.push(data[3]);
-  //               values.min.push(data[4]);
-  //               values.std_dev_range_lower.push(data[5]);
-  //               values.std_dev_range_upper.push(data[6]);
-  //             }
-  //           } else { //edited to show historic data
-  //               dates.dates.push(data[0]);
-  //               values.max.push(data[1]);
-  //               values.mean.push(data[2]);
-  //               values.min.push(data[3]);
-  //               values.std_dev_range_lower.push(data[4]);
-  //               values.std_dev_range_upper.push(data[5]);
-  //             }
-  //           }
-  //         },
-  //         complete: function() {
-  //             var mean = {
-  //                 name: 'Mean',
-  //                 x: dates.dates,
-  //                 y: values.mean,
-  //                 mode: "lines",
-  //                 line: {color: 'blue'}
-  //             };
-  //
-  //             var max = {
-  //                 name: 'Max',
-  //                 x: dates.dates,
-  //                 y: values.max,
-  //                 fill: 'tonexty',
-  //                 mode: "lines",
-  //                 line: {color: 'rgb(152, 251, 152)', width: 0}
-  //             };
-  //
-  //             var min = {
-  //                 name: 'Min',
-  //                 x: dates.dates,
-  //                 y: values.min,
-  //                 fill: 'none',
-  //                 mode: "lines",
-  //                 line: {color: 'rgb(152, 251, 152)'}
-  //             };
-  //
-  //             var std_dev_lower = {
-  //                 name: 'Std. Dev. Lower',
-  //                 x: dates.dates,
-  //                 y: values.std_dev_range_lower,
-  //                 fill: 'tonexty',
-  //                 mode: "lines",
-  //                 line: {color: 'rgb(152, 251, 152)', width: 0}
-  //             };
-  //
-  //             var std_dev_upper = {
-  //                 name: 'Std. Dev. Upper',
-  //                 x: dates.dates,
-  //                 y: values.std_dev_range_upper,
-  //                 fill: 'tonexty',
-  //                 mode: "lines",
-  //                 line: {color: 'rgb(152, 251, 152)', width: 0}
-  //             };
-  //
-  //             var data = [min, max, std_dev_lower, std_dev_upper, mean];
-  //
-  //             if(values.highres.length > 0) {
-  //                 var highres = {
-  //                     name: 'HRES',
-  //                     x: dates.highres,
-  //                     y: values.highres,
-  //                     mode: "lines",
-  //                     line: {color: 'black'}
-  //                 };
-  //
-  //                 data.push(highres)
-  //             }
-  //
-  //             var layout = {
-  //                 title:'Forecast<br>' + titleCase(watershed) + ' Reach ID: ' + reachid,
-  //                 xaxis: {title: 'Date'},
-  //                 yaxis: {title: 'Streamflow m3/s', range: [0, Math.max(...values.max) + Math.max(...values.max)/5]},
-  //                 //shapes: returnShapes,
-  //             }
-  //
-  //             Plotly.newPlot('graph', data, layout);
-  //
-  //             var index = dates.dates.length - 2;
-  //             getreturnperiods(dates.dates[0], dates.dates[index], region, reachid);
-  //
-  //             dates.highres = [], dates.dates = [];
-  //             values.highres = [], values.max = [], values.mean = [], values.min = [], values.std_dev_range_lower = [], values.std_dev_range_upper = [];
-  //         }//add lines to plotly
-  //
-  //     });
-  //
-  //
-  // };
   //*********SEASONAL AVERAGE FUNCTION TAB*******////
   function getSeasonalAverage(graphic) {
     console.log('WE HAVE ENTERED GET_SEASONAL_AVERAGE FUNCTION()');
@@ -975,104 +844,6 @@ function (
     method="ForecastEnsembles";
 
   };
-
-
-
-  //*********SEASONAL AVERAGE FUNCTION TAB*******////
-  // function getSeasonalAverage(graphic) {
-  //   console.log('WE HAVE ENTERED GET_SEASONAL_AVERAGE FUNCTION()');
-  //   var watershed=graphic.attributes.watershed;
-  //   var subbasin = graphic.attributes.subbasin;
-  //   var region=watershed+ "-" +subbasin;
-  //   var reachid = graphic.attributes.comid;
-  //   var method="SeasonalAverage";
-  //   console.log('printing region');
-  //   console.log(region);
-  //   console.log('printing reachID');
-  //   console.log(reachid);
-  //
-  //
-  //   $.ajax({
-  //     type:'GET',
-  //     url: 'query/',
-  //     data:{
-  //       method:method,
-  //       region: region,
-  //       reachid: reachid
-  //     },
-  //     dataType: 'text',
-  //     contentType:'text/plain',
-  //     success: function(data) {
-  //           console.log('we have succeed getting the seasonal average');
-  //           console.log(data);
-  //
-  //           if ($('#graph').length) {
-  //               Plotly.purge('graph');
-  //               $('#graph').remove();
-  //           };
-  //
-  //
-  //           $('div .contentPane').append('<div id="graph"></div>');
-  //
-  //           var allLines = data.split('\n');
-  //           var headers = allLines[0].split(',');
-  //
-  //           for (var i=1; i < allLines.length; i++) {
-  //             var data = allLines[i].split(',');
-  //             dates.dates.push(data[0]);
-  //             values.mean.push(data[1]);
-  //
-  //
-  //           }
-  //       },
-  //       error: function(xhr, status, error){
-  //         console.log("entering error");
-  //         var errorMessage = xhr.status + ': ' + xhr.statusText;
-  //         console.log(errorMessage);
-  //         alert('Error - ' + errorMessage);
-  //       },
-  //
-  //
-  //       complete: function() {
-  //           console.log("complete part of the ajax call for getSeasonalAverage");
-  //           var mean = {
-  //               name: 'Mean',
-  //               x: dates.dates,
-  //               y: values.mean,
-  //               mode: "lines",
-  //               line: {color: 'blue'}
-  //           };
-  //
-  //           var data = [mean];
-  //
-  //           var layout = {
-  //               // title: 'Historical Streamflow<br>'+titleCase(watershed) + ' Reach ID:' + comid,
-  //               title: 'Seasonal Average StreamFlow<br>'+titleCase(watershed) + ' Reach ID:' + reachid,
-  //               xaxis: {title: 'Days'},
-  //               yaxis: {title: 'Streamflow m3/s', range: [0, Math.max(...values.max) + Math.max(...values.max)/5]},
-  //               //shapes: returnShapes,
-  //           }
-  //
-  //           Plotly.newPlot('graph', data, layout);
-  //           // Plotly.newPlot('graphs', data, layout);
-  //
-  //
-  //           var index = dates.dates.length - 2;
-  //           // getreturnperiods(dates.dates[0], dates.dates[index], watershed, subbasin, comid);
-  //           console.log(dates.dates[0]);
-  //           console.log(dates.dates[index]);
-  //           console.log(region);
-  //           console.log(reachid);
-  //           getreturnperiods(dates.dates[0], dates.dates[index], region, reachid);
-  //
-  //
-  //           dates.highres = [], dates.dates = [];
-  //           values.highres = [], values.max = [], values.mean = [], values.min = [], values.std_dev_range_lower = [], values.std_dev_range_upper = [];
-  //       }//add lines to plotly
-  //
-  //   });
-  //
-  // };
 
 
   //*********HISTORIC FUNCTION TAB*******////
@@ -1199,116 +970,6 @@ function (
   };
 
 
-  // //*********HISTORIC FUNCTION TAB*******////
-  // function getHistoricData(graphic) {
-  //   console.log('WE HAVE ENTERED GETHISTORICDATA FUNCTION()');
-  //   var watershed=graphic.attributes.watershed;
-  //   var subbasin = graphic.attributes.subbasin;
-  //   var region=watershed+ "-" +subbasin;
-  //   var reachid = graphic.attributes.comid;
-  //   var method="HistoricSimulation";
-  //   console.log('printing region');
-  //   console.log(region);
-  //   console.log('printing reachID');
-  //   console.log(reachid);
-  //
-  //   $.ajax({
-  //     type:'GET',
-  //     // assync: true,
-  //     url: 'query/',
-  //     data:{
-  //       method:method,
-  //       region: region,
-  //       reachid: reachid
-  //     },
-  //     dataType: 'text',
-  //     contentType:'text/plain',
-  //     success: function(data) {
-  //           console.log('we have succeed getstreamflow');
-  //           // console.log(data);
-  //
-  //           if ($('#graph').length) {
-  //               Plotly.purge('graph');
-  //               $('#graph').remove();
-  //           };
-  //
-  //
-  //           $('div .contentPane').append('<div id="graph"></div>');
-  //           // $('div .contentPane').append($('#graphs'));
-  //
-  //           var allLines = data.split('\n');
-  //           var headers = allLines[0].split(',');
-  //
-  //           for (var i=1; i < allLines.length; i++) {
-  //               var data = allLines[i].split(',');
-  //
-  //               if (headers.includes('high_res (m3/s)')) {
-  //
-  //                   if (data[2] !== 'nan') {
-  //                       dates.dates.push(data[0]);
-  //                       values.mean.push(data[3]);
-  //                   }
-  //               } else {
-  //                   dates.dates.push(data[0]);
-  //                   values.mean.push(data[1]);
-  //
-  //               }
-  //           }
-  //       },
-  //       error: function(xhr, status, error){
-  //         console.log("entering error");
-  //         var errorMessage = xhr.status + ': ' + xhr.statusText;
-  //         console.log(errorMessage);
-  //         alert('Error - ' + errorMessage);
-  //       },
-  //
-  //
-  //
-  //
-  //       complete: function() {
-  //           console.log("COMPLETE PART OF Streamflow()");
-  //           var mean = {
-  //               name: 'Mean',
-  //               x: dates.dates,
-  //               y: values.mean,
-  //               mode: "lines",
-  //               line: {color: 'blue'}
-  //           };
-  //
-  //           var data = [mean];
-  //
-  //           var layout = {
-  //               // title: 'Historical Streamflow<br>'+titleCase(watershed) + ' Reach ID:' + comid,
-  //               title: 'Historical Streamflow<br>'+titleCase(watershed) + ' Reach ID:' + reachid,
-  //               xaxis: {title: 'Date'},
-  //               yaxis: {title: 'Streamflow m3/s', range: [0, Math.max(...values.max) + Math.max(...values.max)/5]},
-  //               // plot_bgcolor:"#7782c5",
-  //
-  //               //shapes: returnShapes,
-  //           }
-  //
-  //           Plotly.newPlot('graph', data, layout);
-  //           // Plotly.newPlot('graphs', data, layout);
-  //
-  //
-  //           var index = dates.dates.length - 2;
-  //           // getreturnperiods(dates.dates[0], dates.dates[index], watershed, subbasin, comid);
-  //           console.log(dates.dates[0]);
-  //           console.log(dates.dates[index]);
-  //           console.log(region);
-  //           console.log(reachid);
-  //           getreturnperiods(dates.dates[0], dates.dates[index], region, reachid);
-  //
-  //
-  //           dates.highres = [], dates.dates = [];
-  //           values.highres = [], values.max = [], values.mean = [], values.min = [], values.std_dev_range_lower = [], values.std_dev_range_upper = [];
-  //       }//add lines to plotly
-  //
-  //   });
-  //
-  //
-  // };
-
 ///*****RTURN PERIODS****/////
 function getreturnperiods(start, end, region, reachid) {
   // var layer_URL="https://tethys2.byu.edu/sptapi/ReturnPeriods"+"?reach_id="+reachid;
@@ -1422,134 +1083,100 @@ function getreturnperiods(start, end, region, reachid) {
     })
 };// create boxes for graph
 
-// function getreturnperiods(start, end, region, reachid) {
-//   console.log("inside getreturnperiods");
-//     $.ajax({
-//       type:'GET',
-//       assync: true,
-//       url: 'returnPeriods/',
-//       data:{
-//         region: region,
-//         reachid: reachid
-//       },
-//       dataType: 'text',
-//       contentType:'text/plain',
-//       success: function (data) {
-//         console.log("printing data");
-//         console.log(typeof(data));
-//         console.log(data);
-//         var returnPeriods = JSON.parse(data);
-//         console.log(returnPeriods);
-//
-//         //RETURN PERIOD MAX
-//         var return_max = parseFloat(returnPeriods.time_series[0].val);
-//         console.log("printing Max");
-//         console.log(return_max);
-//
-//         //RETURN PERIOD 20
-//         var return_20 = parseFloat(returnPeriods.time_series[1].val);
-//         console.log("printing return_20");
-//         console.log(return_20);
-//
-//         //RETURN PERIOD 10
-//         var return_10 = parseFloat(returnPeriods.time_series[2].val);
-//         console.log("printing return10");
-//         console.log(return_10);
-//
-//         //RETURN PERIOD 2
-//         var return_2 = parseFloat(returnPeriods.time_series[3].val);
-//         console.log("printing return2");
-//         console.log(return_2);
-//         var band_alt_max = -9999
-//
-//         var shapes = [
-//                 //return 20 band
-//                 {
-//                   type: 'rect',
-//                   layer: 'below',
-//                   xref: 'x',
-//                   yref: 'y',
-//                   x0: start,
-//                   y0: return_20,
-//                   x1: end,
-//                   y1: Math.max(return_max, band_alt_max),
-//                   line: {width: 0},
-//                   fillcolor: 'rgba(128, 0, 128, 0.4)'
-//                 },
-//                 // return 10 band
-//                 {
-//                     type: 'rect',
-//                     layer: 'below',
-//                     xref: 'x',
-//                     yref: 'y',
-//                     x0: start,
-//                     y0: return_10,
-//                     x1: end,
-//                     y1: return_20,
-//                     line: {width: 0},
-//                     fillcolor: 'rgba(255, 0, 0, 0.4)'
-//                 },
-//                 // return 2 band
-//                 {
-//                     type: 'rect',
-//                     layer: 'below',
-//                     xref: 'x',
-//                     yref: 'y',
-//                     x0: start,
-//                     y0: return_2,
-//                     x1: end,
-//                     y1: return_10,
-//                     line: {width:0},
-//                     fillcolor: 'rgba(255, 255, 0, 0.4)'
-//                 }];
-//
-//           passShape(shapes);
-//
-//         }
-//     })
-// };// create boxes for graph
 
-function passShape(shapes) {
-  console.log("Inside PassShape");
-    var update = {
-        shapes: shapes,
-    };
-    Plotly.relayout('graph', update);
-}
-
-function titleCase(str) {
-    str = str.toLowerCase();
-    str = str.split('_');
-
-    for (var i = 0; i < str.length; i++) {
-        str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
-    }
-
-    return str.join(' ');
-};
 
 
 
 
   ///** ADDITIONAL FUNCTIONS****///
+
+
+  function decideLayerName(layername){
+    var jsonobject;
+        switch (layername) {
+         case "centralAmericaLyr":
+           nameLayerURL="central_america";
+           jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+           break;
+         case "southAmericaLyr":
+           nameLayerURL="south_america";
+           jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+           break;
+         case "southAsiaLyr":
+           nameLayerURL="south_asia";
+           jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+           break;
+         case "africaLyr":
+           nameLayerURL="africa"
+           jsonobject = "http://ai4e-arcserver.byu.edu/arcgis/rest/services/global/"+nameLayerURL+"/MapServer?f=pjson";
+           break;
+         case "Select Region":
+          return;
+          break;
+         case "testLyr":
+           jsonobject= "https://livefeeds2dev.arcgis.com/arcgis/rest/services/GEOGLOWS/GlobalWaterModel_Medium/MapServer/f=pjson";
+           break;
+         }
+         return jsonobject;
+  };
+
+
+
+
+  function passShape(shapes) {
+    console.log("Inside PassShape");
+      var update = {
+          shapes: shapes,
+      };
+      Plotly.relayout('graph', update);
+  };
+
+  function titleCase(str) {
+      str = str.toLowerCase();
+      str = str.split('_');
+
+      for (var i = 0; i < str.length; i++) {
+          str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1);
+      }
+
+      return str.join(' ');
+  };
+
   //Loading function for gif loader at the beginning.
  function showLoading() {
     esri.show(loading);
     map.disableMapNavigation();
     map.hideZoomSlider();
-  }
+  };
 //Hide Function for gif loader at the end of loading the page.
 function hideLoading(error) {
     esri.hide(loading);
     map.enableMapNavigation();
     map.showZoomSlider();
-}
+};
+
+function decideMethodAPI(){
+  switch (actualTab) {
+   case "Forecast":
+     method="ForecastEnsembles";
+     return method;
+     break;
+   case "Historical":
+     method="HistoricSimulation";
+     return method;
+     break;
+   case "Seasonal Average":
+     method="SeasonalAverage";
+     return method;
+     break;
+   }
+};
 
 Date.prototype.addDays = function(days) {
     var date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
-}
+};
 
 
 
